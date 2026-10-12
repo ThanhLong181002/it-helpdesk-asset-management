@@ -1,0 +1,159 @@
+
+{% extends "base.html" %}
+
+{% block title %}Support Tickets | IT Helpdesk{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h1 class="h3 fw-bold">Support Tickets</h1>
+    <p class="text-muted">
+        Monitor and manage IT support requests.
+    </p>
+</div>
+
+<form method="GET" action="{{ url_for('tickets_page') }}"
+      class="card card-body mb-4">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label for="status" class="form-label">Filter by Status</label>
+            <select id="status" name="status" class="form-select">
+                <option value="">All statuses</option>
+                {% for status in ["Open", "In Progress", "Resolved", "Closed"] %}
+                <option value="{{ status }}"
+                    {% if selected_status == status %}selected{% endif %}>
+                    {{ status }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <label for="priority" class="form-label">Filter by Priority</label>
+            <select id="priority" name="priority" class="form-select">
+                <option value="">All priorities</option>
+                {% for priority in ["Critical", "High", "Medium", "Low"] %}
+                <option value="{{ priority }}"
+                    {% if selected_priority == priority %}selected{% endif %}>
+                    {{ priority }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+                Apply Filters
+            </button>
+            <a href="{{ url_for('tickets_page') }}"
+               class="btn btn-outline-secondary">
+                Clear
+            </a>
+        </div>
+    </div>
+</form>
+
+
+<div class="card">
+    <div class="card-header bg-white fw-semibold">
+        Ticket List
+        <span class="badge text-bg-secondary ms-2">
+            {{ tickets|length }} tickets
+        </span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Asset</th>
+                    <th>Assigned To</th>
+                    <th>Update Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ticket in tickets %}
+                <tr>
+                    <td>{{ ticket.id }}</td>
+                    <td>
+                        <div class="fw-semibold">
+                            <a
+                                href="{{ url_for('ticket_detail', ticket_id=ticket.id) }}"
+                                class="text-decoration-none"
+                            >
+                                {{ ticket.title }}
+                            </a>
+                        </div>
+                        <small class="text-muted">
+                            {{ ticket.description or "No description" }}
+                        </small>
+                    </td>
+                    <td>
+                        {% if ticket.priority == "Critical" %}
+                        <span class="badge text-bg-danger">Critical</span>
+                        {% elif ticket.priority == "High" %}
+                        <span class="badge text-bg-warning">High</span>
+                        {% elif ticket.priority == "Medium" %}
+                        <span class="badge text-bg-info">Medium</span>
+                        {% else %}
+                        <span class="badge text-bg-secondary">Low</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ ticket.status }}</td>
+                    <td>{{ ticket.asset_tag or "Unassigned" }}</td>
+                    <td>{{ ticket.assigned_to or "Unassigned" }}</td>
+
+                    <td>
+                        <form
+                            method="POST"
+                            action="{{ url_for('update_ticket', ticket_id=ticket.id) }}"
+                            class="d-flex flex-column gap-2"
+                        >
+                            <select
+                                name="status"
+                                class="form-select form-select-sm"
+                                required
+                            >
+                                {% for status in ["Open", "In Progress", "Resolved", "Closed"] %}
+                                <option
+                                    value="{{ status }}"
+                                    {% if status == ticket.status %}selected{% endif %}
+                                >
+                                    {{ status }}
+                                </option>
+                                {% endfor %}
+                            </select>
+
+                            <input
+                                type="text"
+                                name="note"
+                                class="form-control form-control-sm"
+                                placeholder="Optional note"
+                                maxlength="500"
+                            >
+
+                            <button
+                                type="submit"
+                                class="btn btn-sm btn-primary"
+                            >
+                                Update
+                            </button>
+                        </form>
+                    </td>
+
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                        No tickets found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
